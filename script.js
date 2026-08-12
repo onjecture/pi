@@ -1,3 +1,4 @@
+```javascript
 const piDisplay = document.getElementById("piDisplay");
 const digitCount = document.getElementById("digitCount");
 const status = document.getElementById("status");
@@ -5,6 +6,13 @@ const runtimeDisplay = document.getElementById("runtime");
 const speedDisplay = document.getElementById("speed");
 
 const startTime = performance.now();
+
+const MAX_DIGITS = 1000000;
+const DISPLAY_LIMIT = 5000;
+
+let calculatedPi = "";
+let displayedDigits = 0;
+let calculatedDigits = 0;
 
 status.textContent = "CALCULATING";
 
@@ -17,7 +25,9 @@ function integerSqrt(n) {
         return n;
     }
 
-    let x = 1n << BigInt(Math.ceil(n.toString(2).length / 2));
+    let x = 1n << BigInt(
+        Math.ceil(n.toString(2).length / 2)
+    );
 
     while (true) {
         const y = (x + n / x) >> 1n;
@@ -42,20 +52,18 @@ function binarySplit(a, b) {
             };
         }
 
-        const aBig = BigInt(a);
+        const n = BigInt(a);
 
         const P =
-            -(6n * aBig - 5n) *
-            (2n * aBig - 1n) *
-            (6n * aBig - 1n);
+            -(6n * n - 5n) *
+            (2n * n - 1n) *
+            (6n * n - 1n);
 
         const Q =
-            aBig * aBig * aBig *
-            C3_OVER_24;
+            n * n * n * C3_OVER_24;
 
         const T =
-            P *
-            (13591409n + 545140134n * aBig);
+            P * (13591409n + 545140134n * n);
 
         return { P, Q, T };
     }
@@ -84,82 +92,118 @@ function calculatePi(decimalDigits) {
 
     const terms = Math.ceil(precision / 14) + 1;
 
-    const { Q, T } = binarySplit(0, terms);
+    const result = binarySplit(0, terms);
 
     const C = 426880n * sqrt10005;
 
     const piScaled =
-        (C * Q * scale) / T;
+        (C * result.Q * scale) / result.T;
 
-    let result = piScaled.toString();
+    let value = piScaled.toString();
 
-    while (result.length <= precision) {
-        result = "0" + result;
+    while (value.length <= precision) {
+        value = "0" + value;
     }
 
     const decimalIndex =
-        result.length - precision;
+        value.length - precision;
 
     const integerPart =
-        result.slice(0, decimalIndex);
+        value.slice(0, decimalIndex);
 
     const decimalPart =
-        result.slice(decimalIndex, decimalIndex + decimalDigits);
+        value.slice(
+            decimalIndex,
+            decimalIndex + decimalDigits
+        );
 
     return integerPart + "." + decimalPart;
 }
 
-async function run() {
-    const targetDigits = 1000000;
+function updateStats() {
+    const elapsed =
+        (performance.now() - startTime) / 1000;
 
-    let digitsToCalculate = 100;
+    digitCount.textContent =
+        calculatedDigits.toLocaleString();
 
-    while (digitsToCalculate <= targetDigits) {
-        status.textContent = "CALCULATING";
+    runtimeDisplay.textContent =
+        elapsed.toFixed(1) + "s";
 
-        const calculationStart = performance.now();
-
-        const pi = calculatePi(digitsToCalculate);
-
-        piDisplay.textContent = pi;
-
-        const digits =
-            pi.length - pi.indexOf(".") - 1;
-
-        digitCount.textContent =
-            digits.toLocaleString();
-
-        const elapsed =
-            (performance.now() - startTime) / 1000;
-
-        runtimeDisplay.textContent =
-            elapsed.toFixed(1) + "s";
-
-        const calculationTime =
-            (performance.now() - calculationStart) / 1000;
-
+    if (elapsed > 0) {
         speedDisplay.textContent =
             Math.round(
-                digits / Math.max(calculationTime, 0.001)
+                calculatedDigits / elapsed
             ).toLocaleString() + " digits/s";
+    }
+}
 
-        if (digitsToCalculate >= targetDigits) {
+async function renderPiSlowly() {
+    while (displayedDigits < calculatedDigits) {
+
+        const target =
+            Math.min(
+                displayedDigits + 50,
+                calculatedDigits,
+                DISPLAY_LIMIT
+            );
+
+        if (calculatedPi.length > 0) {
+            piDisplay.textContent =
+                calculatedPi.slice(
+                    0,
+                    target + 2
+                );
+        }
+
+        displayedDigits = target;
+
+        await new Promise(resolve =>
+            setTimeout(resolve, 50)
+        );
+    }
+}
+
+async function run() {
+    let target = 100;
+
+    while (target <= MAX_DIGITS) {
+
+        status.textContent = "CALCULATING";
+
+        const calculation = calculatePi(target);
+
+        calculatedPi = calculation;
+
+        calculatedDigits =
+            calculation.length -
+            calculation.indexOf(".") -
+            1;
+
+        updateStats();
+
+        renderPiSlowly();
+
+        if (target >= MAX_DIGITS) {
             status.textContent = "COMPLETE";
             break;
         }
 
-        if (digitsToCalculate < 1000) {
-            digitsToCalculate += 100;
-        } else if (digitsToCalculate < 10000) {
-            digitsToCalculate += 1000;
-        } else if (digitsToCalculate < 100000) {
-            digitsToCalculate += 10000;
+        if (target < 1000) {
+            target += 100;
+        } else if (target < 10000) {
+            target += 500;
+        } else if (target < 100000) {
+            target += 5000;
         } else {
-            digitsToCalculate += 100000;
+            target += 25000;
         }
 
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise(resolve =>
+            setTimeout(resolve, 20)
+        );
     }
 }
 
 run();
+```
