@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>π — Infinite Pi Calculator</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <main class="container">
+
+        <header>
+            <div class="eyebrow">COMPUTATIONAL π</div>
+            <h1>pi calculator</h1>
+            <p>calculating digits of pi continuously in your browser.</p>
+        </header>
+
+        <section class="stats">
+
+            <div class="stat">
+                <span class="label">DIGITS CALCULATED</span>
+                <span id="digitCount">0</span>
+            </div>
+
+            <div class="stat">
+                <span class="label">STATUS</span>
+                <span id="status">INITIALISING</span>
+            </div>
+
+            <div class="stat">
+                <span class="label">TIME RUNNING</span>
+                <span id="runtime">0.0s</span>
+            </div>
+
+        </section>
+
+        <section class="pi-box">
+
+            <div class="pi-header">
+                <span>π</span>
+                <span id="speed">0 digits/s</span>
+            </div>
+
+            <div id="piDisplay">
+                3.
+            </div>
+
+        </section>
+
+        <footer>
+            <span>chudnovsky algorithm</span>
+            <span>running locally</span>
+        </footer>
+
+    </main>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
